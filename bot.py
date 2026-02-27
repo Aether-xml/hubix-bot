@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 import os
+import asyncio
 from config import BOT_TOKEN, PREFIX, OWNER_ID
 from utils.database import init_db
 from api import BotAPI
@@ -26,6 +27,12 @@ class Nexify(commands.Bot):
         print("  ╚═╝╚═╝╚═╝╚═╝╚═╝")
         print("=" * 55)
         await init_db()
+
+        # Start API server early so Render detects the port
+        if not self._api_started:
+            self._api_started = True
+            self.api = BotAPI(self)
+            await self.api.start()
 
         # Register persistent views
         from cogs.subscription import ClaimButtonView
@@ -60,12 +67,6 @@ class Nexify(commands.Bot):
         print(f"\n  🟢 {self.user} online!")
         print(f"  📊 {len(self.guilds)} servers | {sum(g.member_count or 0 for g in self.guilds)} users")
         print("=" * 55)
-
-        # Start API server
-        if not self._api_started:
-            self._api_started = True
-            self.api = BotAPI(self)
-            await self.api.start()
 
 
 async def on_tree_error(interaction, error):
